@@ -64,13 +64,11 @@ spa.player = (function () {
 
         e.preventDefault();
 
-        console.log(moduleName, 'onPlayerListClick: target ->', e.target);
-
+        // console.log(moduleName, 'onPlayerListClick: target ->', e.target);
 
         $elem = $(e.target);
-
         $tbody = $elem.parents('tbody');
-        console.log(moduleName, 'onPlayerListClick: parent tbody->', $tbody);
+        // console.log(moduleName, 'onPlayerListClick: parent tbody->', $tbody);
 
         if (($elem.is('a') && $tbody.hasClass('player-list-tbody')) ||
             ($elem.is('a') && $tbody.hasClass('hof-list-tbody'))){
@@ -91,34 +89,11 @@ spa.player = (function () {
 
     //------------------- BEGIN LOCAL METHODS --------------------
 
-    // Get handlebars template from server, compile them and
-    // store in template_func map
-    function getTemplates(arr) {
-        var tmpl_url;
-
-        arr.forEach(function(template, idx) {
-            tmpl_url = '/templates/' + template + '.html';
-
-            $.ajax({
-                url: tmpl_url,
-                method: 'GET',
-                dataType: 'html',
-                success: function(html) {
-                    // console.log('getTemplates:', idx, html);
-                    template_func[template]= Handlebars.compile(html);
-                }
-            });
-        });
-    }
-
     function renderPlayerProfile(data) {
 
         var html, player_prof;
 
         // console.log('renderPlayerProfile: data ->', data);
-
-        // clear out what was there
-        // jqueryMap.$db_results.html('');
 
         html = template_func['player-profile-1'](data);
 
@@ -352,27 +327,20 @@ spa.player = (function () {
         setJqueryMap();
 
         // Load  Handlebars templates
-        getTemplates([
+        spa.util.getTemplates([
             'player-profile-1', 'player-batting-stats',
             'player-pitching-stats', 'player-list',
             'player-career-batting', 'player-career-pitching',
             'hall-of-fame-list'
-        ]);
+            ], template_func
+        );
 
         // Set up event handlers
         jqueryMap.$players.on('click', onPlayersClick);
         jqueryMap.$hof.on('click', onHofClick);
 
-        jqueryMap.$db_results
-            .on('mouseenter', '.player-list tbody tr td a', function() {
-                    $(this).css({cursor : 'pointer'});
-            })
-            .on('click', onPlayerListClick);
+        jqueryMap.$db_results.on('click', onPlayerListClick);
 
-        jqueryMap.$db_results
-            .on('mouseenter', '.hof-list tbody tr td a', function() {
-                $(this).css({cursor : 'pointer'});
-            })
     };
 
     // End public method /initModule/

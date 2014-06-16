@@ -1,6 +1,8 @@
 /**
- * Created by raynald on 5/19/14.
+ * Created by raynald on 6/13/14
  */
+
+// Get search input from user and return matches from database
 
 // create namespace for search functionality
 spa.search = (function() {
@@ -11,276 +13,124 @@ spa.search = (function() {
         configMap = {
             set_anchor : null
         },
-        stateMap  = {
 
-        },
-        jqueryMap = {
-
-        };
-    var setJqueryMap, initModule, configModule;
-
-    var
-        onInput, onSearchFocus,
-        // currently selected DOM element in search popup box
-        curPos;
+        jqueryMap = { }, setJqueryMap, initModule, configModule,
+        template_func = {},
+        onSearchFocus, onSubmit, onPlayerListClick;
 
     //----------------- END MODULE SCOPE VARIABLES ---------------
 
     //--------------------- BEGIN DOM METHODS --------------------
     setJqueryMap = function() {
         jqueryMap = {
-            $search : $('#search'),    // search text box
-            $search_results : $('#search-results') // search results
+            $search : $('form.search'), // search form
+            $search_input : $('#search'), // search input
+            $db_results : $('.db-results'),
+            $page_bar : $('.page-bar')
         }
     };
 
     //---------------------- END DOM METHODS ---------------------
 
     //------------------- BEGIN EVENT HANDLERS -------------------
+    onSubmit = function(e) {
+        var input;
 
-    // Watch for key input in search box
-    onInput = function(e) {
-        // Get all of the users in the result set
-        console.log('keydown handler: key', e.keyCode);
-        console.log('curPos:', curPos);
+        e.preventDefault();
 
-        var $li = jqueryMap.$search_results.find('li'), elem;
+        input = jqueryMap.$search_input.val();
+        console.log(moduleName, 'onInput: input ->', input);
 
-        // If the [TAB] or [Enter] keys are pressed
-        if ( e.keyCode == 9 || e.keyCode == 13 ) {
-            if (curPos) {
-                addSelection(curPos);
-                console.log('onInput: retrieve selection from db server');
-            }
-            // Stop the key from doing its normal action
-            e.preventDefault();
-            // return false;
-
-            // If the up key is pressed
-        } else if ( e.keyCode == 38 ) {
-            // Select the previous entry, or the last entry
-            // (if we're at the beginning)
-            console.log('keyup: currPos ->', curPos);
-            elem = $(curPos).prev()[0];
-            return updatePos( elem || $li[ $li.length - 1 ] );
+        if (input.length < 3) {
+            jqueryMap.$search_input
+                .val("Please enter at least three characters")
+                .css({'color' :'orangered', fontSize: '90%'});
+            return false;
         }
-        // If the down key is pressed
-        else if ( e.keyCode == 40 ) {
-            // Select the next entry, or the first entry (if we're at the end)
-            console.log('keydown: currPos ->', curPos);
-            elem = $(curPos).next()[0];
-            return updatePos( elem || $li[0] );
-        }
-    };
 
-    onSearchFocus = function() {
-        var position, offset;
-        jqueryMap.$search.val('');
-
-        // position search pop-up
-        // 1. find position of search input box
-        position = jqueryMap.$search.position();
-        offset = jqueryMap.$search.offset();
-
-        // console.log('onSearchFocus: position top ->', position.top,
-        //    ' left ->', position.left);
-
-        // console.log('onSearchFocus: offset top ->', offset.top,
-        //    ' left ->', offset.left);
-
-        // 2. position popup box
-        jqueryMap.$search_results.css({ position: 'absolute',
-            top:offset.top + 43, left : offset.left
+        // spa.shell will add entry to browser history and kick off DB request
+        // to get search results
+        configMap.set_anchor({
+            url : '/search-list', data: input.trim()
         });
 
-        // jqueryMap.$search_results.show();
+        return false;
+
     };
+
+    // Just clear search box
+    onSearchFocus = function(e) {
+        e.preventDefault();
+        jqueryMap.$search_input.val('').css({'color' :'black', fontSize:'100%'});
+        return false;
+    };
+
+    // Get player profile and stats when player name is clicked
+    onPlayerListClick = function(e) {
+        var $elem, $tbody;
+
+        e.preventDefault();
+
+        $elem = $(e.target);
+        $tbody = $elem.parents('tbody');
+
+        if ($elem.is('a') && $tbody.hasClass('search-list-tbody')) {
+
+            configMap.set_anchor({
+                url : '/player-profile', data: $elem.text().trim()
+            });
+        }
+
+    };
+
     //-------------------- END EVENT HANDLERS --------------------
 
     //------------------- BEGIN LOCAL METHODS --------------------
-    // Add selection to search box
-    // elem is currently selected DOM element is search popup box
-    function addSelection( elem ) {
-        // The text value of the text input
-        console.log('addUser: elem ->', elem);
 
-        jqueryMap.$search.val($(elem).html());
+    // Display search results list
+    function renderSearchList(data) {
+        var html, Ht_feet, Ht_inches;
 
-        // Prevents opt.open() from sending un-needed player-search
-        // request
-        jqueryMap.$search.blur();
+        // console.log('renderSearchResults ->', data);
 
-        // Hide popup box results
-        jqueryMap.$search_results.hide();
+        // do some massaging of data from server
+        data.forEach(function(player, idx) {
+            player.num = idx + 1;
 
-        // Tell spa.shell we've selected a player profile to display
-        // shell will add entry to browser history and kick off DB request
-        // to get player profile
-        configMap.set_anchor({
-            url : '/player-profile', data: jqueryMap.$search.val()
+            // fix date
+            player.profile.Birthdate =
+                new Date(player.profile.Y, player.profile.M - 1, player.profile.D).toLocaleDateString();
+            // fix height
+            Ht_feet = Math.floor((player.profile.Ht / 12));
+            Ht_inches = player.profile.Ht % 12;
+            player.profile.Ht = Ht_feet + "'" + Ht_inches + '"';
+
         });
 
+        html = template_func['search-list'](data);
+        jqueryMap.$page_bar.html('');
+        jqueryMap.$db_results.html(html);
     }
-
-    // On search box input change, call open method to send AJAX request
-    // to server
-    function delayedInput(opt) {
-        // The amount of time (in ms) to wait before looking for new user input
-        opt.time = opt.time || 400;
-
-        // The minimum number of characters to wait for, before firing a request
-        opt.chars = opt.chars != null ? opt.chars : 3;
-
-        // The callback to fire when the results popup should be opened,
-        // and possibly when a new request should be made
-        opt.open = opt.open || function(){};
-
-        // The callback to execute when the results popup should be closed
-        opt.close = opt.close || function(){};
-
-        // Should the focus of the field be taken into account, for
-        // opening/closing the results popup
-        opt.focus = opt.focus !== null ? opt.focus : false;
-
-        // Remember the original value that we're starting with
-        var old = opt.elem.val();
-
-        // And the current open/close state of the results popup
-        var state = false;
-
-        // Check to see if there's been a change in the input,
-        // at a given interval
-
-        setInterval(function(){
-            if (opt.elem.is(':focus')) {
-
-            // The new input value
-            var newValue = opt.elem.val();
-
-            // The number of characters that's been entered
-            var len = newValue.length;
-
-            // Quickly check to see if the value has changed since the last
-            // time that we checked the input
-            // console.log('check input: old=',old, ' new=',newValue,' len=',len);
-
-            if ( old != newValue ) {
-
-                // If not enough characters have been entered, and the 'popup'
-                // is currently open
-                if ( len < opt.chars && state ) {
-
-                    // Close the display
-                    console.log('opt.close()');
-                    opt.close();
-
-                    // And remember that it's closed
-                    state = false;
-
-                    // Otherwise, if the minimum number of characters have been entered
-                    // as long as its more than one character
-                } else if ( len >= opt.chars && len > 0 ) {
-
-                    // Open the results popup with the current value
-                    console.log('opt.open()');
-                    opt.open(newValue, state);
-
-                    // Remember that the popup is current open
-                    state = true;
-
-                }
-
-                // Save the current value for later
-                old = newValue;
-            }
-            }
-        }, opt.time );
-
-        /*
-         // Watch for a key press
-         opt.elem.on('keypress',function(e){
-         // If the keypress resulted in their being no more characters left,
-         // close the results popup
-         console.log('delay.js -> keypress: key', e.keyCode);
-         if ( $(this).val().length == 0 ) {
-         // Close the popup
-         opt.close();
-
-         // Remember that it's closed
-         state = false;
-         }
-         });
-         */
-
-        // If we're also checking for user focus (to handle opening/closing)
-        // the results popup
-        if ( opt.focus ) {
-            // Watch for when the user moves away from the input
-            opt.elem.blur(function(){
-                console.log('delay.js -> blur');
-                // If its currently open
-                if ( state ) {
-                    // Close the popup
-                    opt.close();
-
-                    // And remember that its closed
-                    state = false;
-                }
-            });
-
-            // Watch for when the user focus' back on the popup
-            opt.elem.focus(function(){
-                console.log('delay.js -> focus');
-                // If it has a value, and its currently closed
-                if ( this.value.length != 0 && !state ) {
-                    // Re-open the popup - but with a blank value
-                    // (this lets the 'open' function know not to re-retrieve
-                    // new results from the server, just re-open the popup).
-                    opt.open( '', state );
-
-                    // And remember that the popup is open
-                    state = true;
-                }
-            });
-        }
-    } // delayedInput
-
-    // Change the highlight of the result that's currently selected
-    function updatePos( elem ) {
-
-        // Update the position to the currently selected element
-        curPos = elem; // elem is DOM element
-        console.log('updatePos: curPos ->', curPos);
-
-        // Get all popup box li elements
-        var $li = jqueryMap.$search_results.find('li');
-
-        // Remove the 'cur' class from the currently selected one
-        for ( var i = 0; i < $li.length; i++ ) {
-            var el = $li[i];
-            $(el).removeClass('cur');
-        }
-
-        // And add the highlight to the current user item
-        $(curPos).addClass("cur");
-
-        return false;
-    }
-
-    // Populate search results in popup box
-    function renderSearchResults(elem, resp_arr) {
-        console.log('renderSearchResults: arr len ->', resp_arr.length);
-        elem.html('');
-        resp_arr.forEach(function(name) {
-            elem.append('<li>' + name.nameFirst + ' ' + name.nameLast + '</li>');
-        });
-    }
-
-
 
     //------------------- END LOCAL METHODS ---------------------
 
     //------------------- BEGIN PUBLIC METHODS -------------------
+    function getSearchList(map) {
+        $.ajax({
+            type: "GET",
+            url: map.url,
+            dataType: "json",
+            data : {search : map.data},
+
+            success: function(resp, status){
+                console.log(moduleName, 'ajax success');
+                renderSearchList(resp);
+            }
+        });
+    }
+
+
+
     // Begin public method /configModule/
     // Purpose    : Configuration info from shell
 
@@ -298,115 +148,28 @@ spa.search = (function() {
     initModule = function () {
         setJqueryMap();
 
-        // On startup hide results pop-up
-        jqueryMap.$search_results.hide();
-
-        // install handler for keystrokes in pop-up box
-        jqueryMap.$search.on('keydown', onInput);
+        // Load  Handlebars templates
+        spa.util.getTemplates([
+            'search-list'
+            ], template_func
+        );
 
         // install handler - clear search box when it gains focus
-        jqueryMap.$search.on('focus', onSearchFocus);
+        jqueryMap.$search_input.on('focus', onSearchFocus);
 
-        // Initialize the delayed input checks on our input
-        // This is what gets things going!
-        delayedInput({
-            // We're attaching to the input text field
-            elem: jqueryMap.$search,
+        // search form handler
+        jqueryMap.$search.on('submit', onSubmit);
 
-            // We're going to start searching after this many characters of input
-            chars: 3,
+        jqueryMap.$db_results.on('click', onPlayerListClick);
 
-            // When the text field loses focus, close the results popup
-            focus: false,
-
-            // Handle when the result popup should be opened up
-            open: function (val, open) {
-                // Get the last word out of the comma-separated list of words
-                // var w = trim( q.substr( q.lastIndexOf(',')+1, q.length ) );
-                var w = 1;
-
-                // Make sure that we're dealing with a word, at least
-                if (w) {
-                    // Make sure that no user is currently selected
-                    curPos = null;
-
-                    // Get the UL that holds all the results
-                    // var results = id("results").lastChild;
-                    var $ul = jqueryMap.$search_results.find('ul');
-
-                    // And empty it out
-                    $ul.html('');
-
-                    // Do a request for new data
-                    console.log('openPopup: send data ->', val);
-
-                    $.ajax({
-                        type: "GET",
-                        url: "/player-search",
-                        dataType: "json",
-                        data: {search : val.trim()}, // appended to URL as query string
-
-                        success: function(resp, status){
-                            var i;
-                            console.log('ajax success: response ->', resp);
-
-                            renderSearchResults($ul, resp);
-
-                            // Go through each of the returned results
-                            var $li = $ul.find('li');
-                            for (i = 0; i < $li.length; i++) {
-                                console.log($li[i],'add handler');
-
-                                $($li[i]).hover(function() {
-                                    $(this).css({cursor:'pointer'});
-                                    console.log('hover handler: elem ->', this);
-                                    updatePos(this);
-                                });
-
-                                // When the result is clicked
-                                $($li[i]).bind('click',function(){
-                                    // Add the user to the input
-                                    console.log('click handler: elem ->', this);
-                                    console.log('retrieve selection from db server');
-                                    addSelection(this); //this s/b <li> element
-
-                                    // And focus back on the input again
-                                    // $input.focus();
-                                });
-                            }
-
-                            if ( $li.length == 0 ) {
-                                jqueryMap.$search_results.hide();
-                            } else {
-                                // Add 'odd' classes to each result
-                                // to give them a striping
-                                for (i = 1; i < $li.length; i += 2)
-                                    // addClass( li[i], "odd" );
-                                    $($li[i]).addClass('odd');
-
-                                // Set the currently selected result to the first one
-                                updatePos( $li[0] );
-                                jqueryMap.$search_results.show();
-                            }
-                        }
-                    });
-                }
-            },
-
-            // When the popup needs to be closed
-            close: function() {
-                jqueryMap.$search_results.hide();
-            }
-        });
-
+        // End public method /initModule/
     };
-
-    // End public method /initModule/
 
     // return public methods
     return {
         configModule : configModule,
-        initModule   : initModule
+        initModule   : initModule,
+        getSearchList : getSearchList
     };
 
 }());

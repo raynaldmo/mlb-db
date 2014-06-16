@@ -170,6 +170,7 @@ spa.shell = (function () {
     // End Event handler /onHashchange
 
     //------------------- BEGIN LOCAL METHODS -------------------
+    // These next two functions are for future use
     function showSplashBackground() {
         console.log(moduleName, 'showSplashBackground');
         jqueryMap.$body.css({backgroundImage : './images/splash-1024.jpg'});
@@ -194,6 +195,8 @@ spa.shell = (function () {
             spa.player.getPlayerProfile(map);
         } else if (map.url == '/player-list') {
             spa.player.getPlayerList(map);
+        } else if (map.url == '/search-list') {
+            spa.search.getSearchList(map);
         } else if (map.url == '/hof-list') {
             spa.player.getHofList(map);
         } else if (map.url == '/franchise-list') {
@@ -221,6 +224,13 @@ spa.shell = (function () {
     // Purpose    : Initializes module
 
     initModule = function () {
+        var device, mobile_device;
+
+        // Detect if mobile device. May not be the best way to do this
+        device = /Android|webOS|iPhone|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
+        mobile_device = device.test(navigator.userAgent);
+
         setJqueryMap();
 
         // configure uriAnchor to use our schema
@@ -230,10 +240,19 @@ spa.shell = (function () {
         //});
 
         // configure and initialize feature modules
-        spa.search.configModule({
-            set_anchor : changeAnchorPart
-        });
-        spa.search.initModule();
+        if (!mobile_device) {
+            // Auto-complete search
+            spa.autoc_search.initModule();
+            spa.autoc_search.configModule({
+                set_anchor : changeAnchorPart
+            });
+        } else {
+            // display search list
+            spa.search.initModule();
+            spa.search.configModule({
+                set_anchor : changeAnchorPart
+            });
+        }
 
         spa.pagination.configModule({
             set_anchor : changeAnchorPart

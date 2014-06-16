@@ -124,30 +124,6 @@ spa.team = (function () {
     //-------------------- END EVENT HANDLERS --------------------
 
     //------------------- BEGIN LOCAL METHODS --------------------
-
-
-    // Get handlebars template from server, compile them and
-    // store in template_func map
-    // TODO: Move this to utilities module
-    function getTemplates(arr) {
-        var tmpl_url;
-
-        arr.forEach(function(template, idx) {
-            tmpl_url = '/templates/' + template + '.html';
-
-            $.ajax({
-                url: tmpl_url,
-                cache : true,
-                method: 'GET',
-                dataType: 'html',
-                success: function(html) {
-                    // console.log('getTemplates:', idx, html);
-                    template_func[template]= Handlebars.compile(html);
-                }
-            });
-        });
-    }
-
     function renderFranchiseList(data) {
         var  html, name;
 
@@ -326,10 +302,11 @@ spa.team = (function () {
         setJqueryMap();
 
         // Load  Handlebars templates
-        getTemplates([
+        spa.util.getTemplates([
             'franchise-list', 'team-list', 'team-profile',
             'team-year-stats', 'team-total-stats-1'
-        ]);
+            ], template_func
+        );
 
         // Set up event handlers
         jqueryMap.$franchises.on('click', onFranchisesClick);

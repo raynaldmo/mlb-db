@@ -6,42 +6,6 @@ var
 function PlayerHandler (cfg, db) {
     "use strict";
 
-    this.playerSearch = function(req, res, next) {
-        "use strict";
-
-        console.log('playerSearch: url ->', req.url);
-        console.log('playerSearch: query ->', req.query);
-
-        var search_arr = [] , query, key = [],
-            players = db.collection('players');
-
-        search_arr = req.query['search'].split(' ');
-
-        // Build the query
-        key[0] = '^' + search_arr[0] + '*';
-
-        if (search_arr.length == 1) {
-            query = {$or : [{"nameFirst": { $regex : key[0], $options: 'i'} },
-                {"nameLast" : {$regex : key[0], $options:'i'}} ]};
-        } else {
-            key[1] = '^' + search_arr[1] + '*';
-            query = {$and : [{"nameFirst": { $regex : key[0], $options: 'i'} },
-                {"nameLast" : {$regex : key[1], $options:'i'}}
-            ]};
-        }
-
-        players.find(query, {_id:0, "nameFirst":1, "nameLast":1}).limit(10).toArray(function(err, result) {
-            if (err) {
-                return next(err);
-            }
-            // console.log('playerSearch: result ->', result);
-
-            res.setHeader('Cache-Control', 'public, max-age=' + cfg.maxAgeD);
-            return res.send(result);
-
-        });
-    };
-
     // Access fielding table to add team and position to player profile
     // db.fielding.aggregate({$match : {"playerID": "ruthba01"}}, {$group : {_id:"$playerID", "Team": {$addToSet : "$teamID"}, "POS" : {$addToSet : "$POS"}}})
 
@@ -254,6 +218,7 @@ function PlayerHandler (cfg, db) {
 
         console.log('playerList: url ->', req.url);
         console.log('playerList: query ->', req.query);
+
         // console.log('playerList: if-none-match ->', req.get('If-None-Match'));
         // console.log('playerList: etag ->', res.get('etag'));
 
@@ -271,36 +236,7 @@ function PlayerHandler (cfg, db) {
         */
 
         players = db.collection('players');
-        // use $project to build sub-document with:
-        // Name, Ht, Wt, Birthdate, Birthplace
 
-        // The following version doesn't work (get 500 server error)
-/*
-        cursor = players.aggregate([{
-            $project : {
-                _id: 0,
-                profile : {
-                    LastName : "$nameLast",
-                    Name : {$concat : ["$nameFirst", " ", "$nameLast"]},
-                    Ht : "$height", Wt : "$weight",
-                    M : "$birthMonth", D : "$birthDay", Y : "$birthYear",
-                    Place : {$concat : ["birthCity",",","$birthState"," ","$birthCountry"]}
-                }
-            }
-        }]);
-
-        cursor.sort([["profile.LastName", 1]]).limit(1).toArray(function(err, result) {
-            if (err) {
-                return next(err);
-            }
-            console.log('playerList ->', result);
-            if (result) {
-                return res.send(result);
-            }
-            res.send({data: null});
-        })
-    };
-*/
         page = +req.query.page // change to number!
         limit = +req.query.limit;
         skip = (page - 1) * limit;
@@ -313,7 +249,6 @@ function PlayerHandler (cfg, db) {
             {$sort : {"nameLast" : 1, "nameFirst" : 1}},
             {$project : {
                 _id: 0,
-
                 profile : {
                     PlayerId : "$playerID",
                     LastName : "$nameLast", // for sorting purposes
@@ -348,13 +283,6 @@ function PlayerHandler (cfg, db) {
 
         hof = db.collection('hof');
         players = db.collection('players');
-
-        /*
-         cursor = hof.find({}, {_id:0})
-         .sort([["playerID", 1],["yearid", 1]])
-         .skip(skip)
-         .limit(limit);
-         */
 
         cursor = hof.aggregate([
             {$match : {inducted : 'Y'}},
@@ -398,6 +326,6 @@ function PlayerHandler (cfg, db) {
 
     };
 
-} // ContentHandler
+} // PlayerHandler
 
 module.exports = PlayerHandler;
