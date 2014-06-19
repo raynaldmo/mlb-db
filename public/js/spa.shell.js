@@ -22,7 +22,13 @@ spa.shell = (function () {
     var
         moduleName = '[shell] ',
         configMap = {
-            anchor_schema_map : {}
+            anchor_schema_map : {},
+            about_html :
+              '<div id="about-content">Data source credit: ' +
+                '<a href="http://www.seanlahman.com" id="lahman">The Lahman Baseball Database</a>' +
+                '<p>Email <a href="mailto:raynaldmo@gmail.com" id="mail">raynaldmo@gmail.com</a>' +
+                ' &copy; 2014 mlb-db.com</p>' +
+              '</div>'
         },
         stateMap  = {
             anchor_map : null
@@ -33,7 +39,8 @@ spa.shell = (function () {
 
     var setJqueryMap, configModule, initModule,
         changeAnchorPart, copyAnchorMap,
-        onHashchange, decodeAnchorMap;
+        onHashchange, decodeAnchorMap, showAboutContent,
+        onLinkClick;
 
     //----------------- END MODULE SCOPE VARIABLES ---------------
 
@@ -52,8 +59,10 @@ spa.shell = (function () {
     setJqueryMap = function () {
         jqueryMap = {
             $body : $('body'),
-            $content : $('.content'),
-            $db_results : $('.db-results')
+            $about : $('#about'),
+            $about_content : $('#about-content'),
+            $db_results : $('.db-results'),
+            $page_bar : $('.page-bar')
         }
     };
 
@@ -130,6 +139,15 @@ spa.shell = (function () {
 
 
     //-------------------- END EVENT HANDLERS --------------------
+    showAboutContent = function(e) {
+        e.preventDefault();
+
+        jqueryMap.$page_bar.html('');
+
+        jqueryMap.$db_results.html(configMap.about_html);
+        return false;
+    };
+
     // Begin Event handler /onHashchange/
     // Purpose    : Handles the hashchange event
     // Actions    :
@@ -168,6 +186,25 @@ spa.shell = (function () {
 
     };
     // End Event handler /onHashchange
+
+    // Handle link clicks on about page itself
+    // Probably a complicated way to do this!
+    onLinkClick = function(e) {
+        var $elem;
+
+        e.preventDefault();
+
+        console.log(moduleName, 'onLinkClick: target ->', e.target);
+
+        $elem = $(e.target);
+
+        if ($elem.is('a') && ($elem.attr('id') == 'lahman')){
+            window.open('http://www.seanlahman.com');
+        }
+        if ($elem.is('a') && ($elem.attr('id') == 'mail')){
+            window.location.href = 'mailto:raynaldmo@gmail.com';
+        }
+    };
 
     //------------------- BEGIN LOCAL METHODS -------------------
     // These next two functions are for future use
@@ -273,6 +310,13 @@ spa.shell = (function () {
             set_page_bar_page : spa.pagination.setBarPage
         });
         spa.team.initModule();
+
+        // Handle click for about page
+        jqueryMap.$about.on('click', showAboutContent);
+
+        // Need this to handle link (<a>) clicks on about page itself
+        // TODO: Investigate easier/cleaner way to do this
+        jqueryMap.$db_results.on('click', onLinkClick);
 
         // Handle URI anchor change events.
         // This is done /after/ all feature modules are configured
