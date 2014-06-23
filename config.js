@@ -13,8 +13,11 @@ module.exports = {
     },
     production : {
         mode : "production",
-        mongoDbUri : process.env.MONGOLAB_URI,
-        // mongoDbUri : "mongodb://192.168.0.252:27017/mlb",
+        // Use this URI to use heroku provisioned mongodb database (runs 2.4.9)
+        // mongoDbUri : process.env.MONGOLAB_URI,
+        // Use this URI to use mongodb database directly provisioned by mongolab
+        // (currently uses mongodb 2.6.2)
+        mongoDbUri : "mongodb://admin:jr6460*@ds051459.mongolab.com:51459/mlb-db",
         maxAgeS : 60 * 60 * 24 * 1000, // in ms
         maxAgeD : 60 * 60 * 24 // in seconds
     }
