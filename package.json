@@ -13,7 +13,7 @@
         "fresh" : "0.2.x",
         "async" : "0.9.x"
     },
-    "description": "MLB database site using Sean Lahman MLB database",
+    "description": "MLB player/team site",
     "main": "app.js",
     "repository": {
         "type": "git",
