@@ -13,8 +13,8 @@ module.exports = {
     },
     production : {
         mode : "production",
-        // mongoDbUri : process.env.MONGOLAB_URI,
-        mongoDbUri : "mongodb://192.168.0.252:27017/mlb",
+        mongoDbUri : process.env.MONGOLAB_URI,
+        // mongoDbUri : "mongodb://192.168.0.252:27017/mlb",
         maxAgeS : 60 * 60 * 24 * 1000, // in ms
         maxAgeD : 60 * 60 * 24 // in seconds
     }
