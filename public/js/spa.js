@@ -15,6 +15,10 @@
  */
 /*global $, spa */
 
+// Un-comment to get supress all console.log messages
+// var console = {};
+// console.log = function () {};
+
 var spa = (function () {
     'use strict';
     var initModule = function () {

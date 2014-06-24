@@ -335,11 +335,11 @@ spa.autoc_search = (function() {
                             // Go through each of the returned results
                             var $li = $ul.find('li');
                             for (i = 0; i < $li.length; i++) {
-                                console.log($li[i],'add handler');
+                                // console.log($li[i],'add handler');
 
                                 $($li[i]).hover(function() {
                                     $(this).css({cursor:'pointer'});
-                                    console.log('hover handler: elem ->', this);
+                                    // console.log('hover handler: elem ->', this);
                                     updatePos(this);
                                 });
 

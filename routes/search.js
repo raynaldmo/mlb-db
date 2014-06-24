@@ -29,8 +29,8 @@ function buildQuery(req, last_name_only) {
         ]};
     }
 
-    console.log('buildQuery: keys ->', key[0], key[1]);
-    console.log('buildQuery: db query ->', query);
+    // console.log('buildQuery: keys ->', key[0], key[1]);
+    // console.log('buildQuery: db query ->', query);
 
     return query;
 }
@@ -54,7 +54,7 @@ function SearchHandler(cfg, db) {
             if (err) {
                 return next(err);
             }
-            console.log('autocSearch: result ->', result);
+            // console.log('autocSearch: result ->', result);
 
             res.setHeader('Cache-Control', 'public, max-age=' + cfg.maxAgeD);
             return res.send(result);
@@ -74,7 +74,7 @@ function SearchHandler(cfg, db) {
 
         query = buildQuery(req, 1);
 
-        console.log('searchList: db query ->', query);
+        // console.log('searchList: db query ->', query);
 
         cursor = players.aggregate([
             {$match : query },
@@ -94,7 +94,7 @@ function SearchHandler(cfg, db) {
         );
 
         cursor.get(function(err, result) {
-            console.log('searchList: result ->', result);
+            // console.log('searchList: result ->', result);
             res.setHeader('Cache-Control', 'public, max-age=' + cfg.maxAgeD);
             return res.send(result);
         });
