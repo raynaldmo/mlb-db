@@ -244,7 +244,7 @@ spa.player = (function () {
     function renderHofList(data, init, page, limit) {
         var html, max_page;
 
-        //console.log(moduleName, 'renderHofList ->', data);
+        // console.log(moduleName, 'renderHofList ->', data);
 
         html = template_func['hall-of-fame-list'](data);
         jqueryMap.$db_results.html(html);

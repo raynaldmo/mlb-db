@@ -1,5 +1,6 @@
 // ------------ BEGIN MODULE SCOPE VARIABLES --------------
 var
+    async = require('async'),
     fresh = require('fresh'); // not currently used
 // ------------- END MODULE SCOPE VARIABLES ---------------
 
@@ -303,6 +304,11 @@ function PlayerHandler (cfg, db) {
 
         num = (page - 1) * limit; arr = [];
 
+        // The following has a race condition -
+        // cursor may get exhausted before all players.findOne() callbacks have
+        // finished executing
+
+        /*
         cursor.each(function(err, result) {
             if (err) return next(err);
             if (!result) {
@@ -322,6 +328,35 @@ function PlayerHandler (cfg, db) {
                     arr.push(result);
                 }
             )
+        });
+        */
+
+        function addPlayerName(result, arr, num, callback) {
+            players.findOne(
+                {playerID: result.playerID}, {_id:0, nameFirst : 1, nameLast : 1},
+                function(err, player) {
+                    if (err) return callback(err);
+
+                    result.num = num++;
+                    result.name = player['nameFirst'] + ' ' + player['nameLast'];
+                    arr.push(result);
+                    callback();
+                }
+            );
+        }
+
+        // use async module to eliminate race condition noted above in
+        // cursor.each()
+        cursor.get(function(err, results) {
+            async.eachSeries(results, function(result, callback) {
+                num++;
+                addPlayerName(result, arr, num, callback);
+            }, function(err) {
+                if (err) return next(err);
+                // console.log('hofList ->', arr);
+                res.setHeader('Cache-Control', 'public, max-age=' + cfg.maxAgeD);
+                res.send(arr);
+            })
         });
 
     };
