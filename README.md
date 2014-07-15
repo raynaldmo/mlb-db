@@ -25,7 +25,9 @@ Back End
 
 Cloud Hosting
 --------------
-Heroku 
+[Heroku]
+
+[mongolab]
 
 Re-factor
 ----------
@@ -34,9 +36,13 @@ Re-factor
 #### Feel free to contribute to this project!
 
 
-
 [Single Page Web Applications]:http://www.amazon.com/Single-Page-Applications-end---end/dp/1617290750/ref=sr_1_1?s=books&ie=UTF8&qid=1405382977&sr=1-1&keywords=single+page+web+applications
 
 [Sean Latham MLB database]:http://www.seanlahman.com/baseball-archive/statistics/
 
 [mlb-db]:http://mlb-db.herokuapp.com/
+
+[Heroku]:https://www.heroku.com/
+
+[mongolab]:https://mongolab.com/welcome/
+
