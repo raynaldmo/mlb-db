@@ -16,12 +16,12 @@ Uses [Sean Lahman Baseball Database]. The latest version of this database has st
 2. Namespacing - Single global: spa  
 
 3. Modules
-    * spa.shell.js - controller/router , initializes all modules
-    * spa.player.js - model and view for player list, player profiles and player stats
-    * spa.team.js - model and view for team list, team profiles and team stats  
-    * spa.autoc_search.js - model and view for auto-complete search (for desktop)
-    * spa.search.js - model and view for search feature (for phones & tablets)
-    * spa.pagination.js - pagination for player and team list views 
+* spa.shell.js - controller/router , initializes all modules
+* spa.player.js - model and view for player list, player profiles and player stats
+* spa.team.js - model and view for team list, team profiles and team stats  
+* spa.autoc_search.js - model and view for auto-complete search (for desktop)
+* spa.search.js - model and view for search feature (for phones & tablets)
+* spa.pagination.js - pagination for player and team list views 
 
 
 Templates  
