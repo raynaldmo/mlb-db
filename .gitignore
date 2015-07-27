@@ -7,3 +7,4 @@ js/jquery.jqpagination.js
 templates/player-profile-2.html
 views/index.jade
 views/layout.jade
+development/
