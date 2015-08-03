@@ -5,6 +5,8 @@ Uses [Sean Lahman Baseball Database]. The latest version of this database has st
 
 * Built with Bootstrap 3/Node.js/MongoDB
 
+* Design leveraged from architecture and components in [Single Page Web Applications]
+
 * See what the app looks like [mlb-db]
 
 ##Design Architecture
